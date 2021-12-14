@@ -1,3 +1,4 @@
+from math import e
 import random,time
 
 innovNum = 0
@@ -56,7 +57,6 @@ class Topology:
                 self.nodes[edge.end] = Node(edge.end,[edge],[],frontLayer + 1)
                 if self.inNodeNum <= edge.end < self.inNodeNum + self.outNodeNum:
                     self.nodes[edge.end].layer = -1
-                print(frontLayer)
                 if self.maxLayer < frontLayer + 1:
                     self.maxLayer = frontLayer + 1
             else:
@@ -80,12 +80,14 @@ class Topology:
             targetLayer = nowLayer + 1
             if nowLayer == self.maxLayer:
                 targetLayer = -1
+            print("taget :",targetLayer)
             for edge in self.edges:
-                if self.nodes[edge.end].layer == targetLayer and not self.nodes[edge.end].disAbled:
+                if self.nodes[edge.end].layer == targetLayer and not edge.disAbled:
                     if self.nodes[edge.start].layer != 0:
                         values[edge.end] += ReLU(values[edge.start] * edge.weight)
                     else:
                         values[edge.end] += values[edge.start] * edge.weight
+                    print("forward :",edge.start,edge.end,values[edge.end])
         return [values[i] for i in range(self.inNodeNum , self.inNodeNum + self.outNodeNum)]
 
     def addEdgeMutation(self):
@@ -113,23 +115,61 @@ class Topology:
             connectedZone = list(map(lambda x: x.end ,self.nodes[start.nodeId].next))
             end = self.nodes[random.choice(list(self.nodes.keys()))]
         weight = random.random()
-        print((start.nodeId,end.nodeId,weight,innovNum))
+        print(f'newEdge({innovNum}) : {start.nodeId} -> {end.nodeId}[{weight}]')
         self.edges.append(Edge(start.nodeId,end.nodeId,weight,innovNum))
         self.init(*self.edges)
         innovNum += 1
     
     def addNodeMutation(self):
-        start = self.nodes[random.choice(list(self.nodes.keys()))]
-        end = self.nodes[random.choice(list(self.nodes.keys()))]
+        global innovNum
+
+        def modifyLayer(nextNode):
+            for edge in nextNode.next:
+                end = edge.end
+                if self.nodes[end].layer != -1 and self.nodes[end].layer <= nextNode.layer + 1:
+                    self.nodes[end].layer = nextNode.layer + 1
+                    if self.maxLayer <= nextNode.layer + 1: self.maxLayer = nextNode.layer + 1
+                    nextNode = self.nodes[end]
+                    modifyLayer(nextNode)
+                else:
+                    break
+
+        edgeNum = random.randint(0,len(self.edges)-1)
+        edge = self.edges[edgeNum]
+        self.edges[edgeNum].disAbled = True
+
+        newId = max(self.nodes.keys()) + 1
+        frontEdge = Edge(edge.start, newId, 1.0, innovNum)
+        endEdge = Edge(newId, edge.end, edge.weight, innovNum)
+
+        self.nodes[newId] = Node(newId, [frontEdge], [endEdge], self.nodes[edge.start].layer + 1)
+        if self.nodes[newId].layer >= self.nodes[edge.end].layer:
+            nextNode = self.nodes[newId]
+            if self.maxLayer < nextNode.layer + 1: self.maxLayer = nextNode.layer
+            modifyLayer(nextNode)
+
+        self.nodes[edge.start].next.append(frontEdge)
+        innovNum += 1
+
+        self.nodes[edge.end].before.append(endEdge)
+        innovNum += 1
+
+        self.edges.append(frontEdge)
+        self.edges.append(endEdge)
+
+        print(f'newNode({newId}) : {edge.start} -> {edge.end}')
 
 t = Topology(3,2)
 innovNum = 5
 t.init()
 t.addEdgeMutation()
+t.addNodeMutation()
 t.addEdgeMutation()
 t.addEdgeMutation()
 t.addEdgeMutation()
 t.addEdgeMutation()
 t.addEdgeMutation()
+#for i in t.nodes.keys():
+#    print(f'{i} : {t.nodes[i].before} // {t.nodes[i].next} // {t.nodes[i].layer}')
 result = t.forward(2,2,2)
 print(result)
