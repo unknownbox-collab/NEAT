@@ -128,7 +128,7 @@ class Topology:
 
         edgeNum = random.randint(0,len(self.edges)-1)
         edge = self.edges[edgeNum]
-        while self.edges[edgeNum].disAbled:
+        while edge.disAbled:
             edgeNum = random.randint(0,len(self.edges)-1)
             edge = self.edges[edgeNum]
         self.edges[edgeNum].disAbled = True
@@ -147,6 +147,27 @@ class Topology:
         self.edges.append(endEdge)
         self.init(*self.edges)
         print(f'>> newNode : {edge.start} -> ({newId}) -> {edge.end}')
+    
+    def changeWeightMutation(self):
+        edgeNum = random.randint(0,len(self.edges)-1)
+        edge = self.edges[edgeNum]
+        while edge.disAbled:
+            edgeNum = random.randint(0,len(self.edges)-1)
+            edge = self.edges[edgeNum]
+        newValue = random.random()
+        temp = self.edges[edgeNum].weight
+        self.edges[edgeNum].weight = newValue
+        for i in range(len(self.nodes[edge.start].next)):
+            if self.nodes[edge.start].next[i].end == edge.end:
+                self.nodes[edge.start].next[i].weight = newValue
+                break
+        
+        for i in range(len(self.nodes[edge.end].next)):
+            if self.nodes[edge.end].next[i].start == edge.start:
+                self.nodes[edge.end].next[i].weight = newValue
+                break
+        
+        print(f">> changeWeight({edge.start} -> {edge.end}) : {temp} -> {newValue}")
 
 t = Topology(3,2)
 innovNum = 5
@@ -159,5 +180,6 @@ t.addEdgeMutation()
 t.addEdgeMutation()
 t.addEdgeMutation()
 t.addEdgeMutation()
+t.changeWeightMutation()
 result = t.forward(1,1,1)
 print(result)
