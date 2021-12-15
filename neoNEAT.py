@@ -18,6 +18,11 @@ class Node:
         self.next = next
         self.layer = layer
 
+def cross(t1, t2):
+    innov1 = set(map(lambda x : x.innov, t1.edges))
+    innov2 = set(map(lambda x : x.innov, t2.edges))
+    innov1 & innov2
+
 class Topology:
     def __init__(self, inNodeNum, outNodeNum) -> None:
         self.inNodeNum = inNodeNum
@@ -148,7 +153,7 @@ class Topology:
         self.init(*self.edges)
         print(f'>> newNode : {edge.start} -> ({newId}) -> {edge.end}')
     
-    def changeWeightMutation(self):
+    def setWeightMutation(self):
         edgeNum = random.randint(0,len(self.edges)-1)
         edge = self.edges[edgeNum]
         while edge.disAbled:
@@ -166,8 +171,27 @@ class Topology:
             if self.nodes[edge.end].next[i].start == edge.start:
                 self.nodes[edge.end].next[i].weight = newValue
                 break
+        print(f">> setWeight({edge.start} -> {edge.end}) : {temp} -> {newValue}")
+    
+    def addWeightMutation(self):
+        edgeNum = random.randint(0,len(self.edges)-1)
+        edge = self.edges[edgeNum]
+        while edge.disAbled:
+            edgeNum = random.randint(0,len(self.edges)-1)
+            edge = self.edges[edgeNum]
+        newValue = (random.random() - 0.5)/2
+        temp = self.edges[edgeNum].weight
+        self.edges[edgeNum].weight = min(1,max(0,temp + newValue))
+        for i in range(len(self.nodes[edge.start].next)):
+            if self.nodes[edge.start].next[i].end == edge.end:
+                self.nodes[edge.start].next[i].weight = newValue
+                break
         
-        print(f">> changeWeight({edge.start} -> {edge.end}) : {temp} -> {newValue}")
+        for i in range(len(self.nodes[edge.end].next)):
+            if self.nodes[edge.end].next[i].start == edge.start:
+                self.nodes[edge.end].next[i].weight = newValue
+                break
+        print(f">> addWeight({edge.start} -> {edge.end}) : {temp} -> {temp + newValue}")
 
 t = Topology(3,2)
 innovNum = 5
@@ -180,6 +204,7 @@ t.addEdgeMutation()
 t.addEdgeMutation()
 t.addEdgeMutation()
 t.addEdgeMutation()
-t.changeWeightMutation()
+t.setWeightMutation()
+t.addWeightMutation()
 result = t.forward(1,1,1)
 print(result)
