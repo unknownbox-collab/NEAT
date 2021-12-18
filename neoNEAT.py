@@ -21,7 +21,11 @@ class Node:
 def cross(t1, t2):
     innov1 = set(map(lambda x : x.innov, t1.edges))
     innov2 = set(map(lambda x : x.innov, t2.edges))
-    innov1 & innov2
+    multi = innov1 & innov2
+    if t1.fitness > t2.fitness:
+        for i in range(multi):
+            if t1 == multi[i]:
+                pass
 
 class Topology:
     def __init__(self, inNodeNum, outNodeNum) -> None:
@@ -30,11 +34,13 @@ class Topology:
         self.maxLayer = 0
         self.nodes = {}
         self.edges = []
+        self.fitness = 0
     
     def init(self,*edges):
         self.maxLayer = 0
         self.nodes = {}
         self.edges = list(edges)
+        self.fitness = 0
 
         def modifyLayer(nextNode):
             for edge in nextNode.next:
@@ -193,18 +199,28 @@ class Topology:
                 break
         print(f">> addWeight({edge.start} -> {edge.end}) : {temp} -> {temp + newValue}")
 
-t = Topology(3,2)
-innovNum = 5
-t.init()
-t.addEdgeMutation()
-t.addNodeMutation()
-t.addEdgeMutation()
-t.addNodeMutation()
-t.addEdgeMutation()
-t.addEdgeMutation()
-t.addEdgeMutation()
-t.addEdgeMutation()
-t.setWeightMutation()
-t.addWeightMutation()
+t = Topology(3,1)
+innovNum = 11
+t.init(
+    Edge(0,3,1,0),
+    Edge(1,4,1,1,True),
+    Edge(2,3,1,2),
+    Edge(1,4,1,3),
+    Edge(4,3,1,4),
+    Edge(0,4,1,7)
+)
+t2 = Topology(3,1)
+t2.init(
+    Edge(0,3,1,0),
+    Edge(1,4,1,1,True),
+    Edge(2,3,1,2),
+    Edge(1,4,1,3),
+    Edge(4,3,1,4,True),
+    Edge(4,5,1,5),
+    Edge(5,3,1,6),
+    Edge(2,4,1,8),
+    Edge(0,5,1,9)
+)
+cross(t,t2)
 result = t.forward(1,1,1)
 print(result)
